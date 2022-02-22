@@ -1,10 +1,12 @@
 'use strict';
 
+const calc = document.getElementById('calc');
 const display = document.getElementById('display');
 const numeros = document.querySelectorAll('[id*=tecla]');
 const operadores = document.querySelectorAll('[id*=operador]');
 
 let novoNumero = true;
+let novaConta = true;
 let operador;
 let numeroAnterior;
 
@@ -16,6 +18,7 @@ const calcular = () => {
         novoNumero = true;
         const resultado = eval(`${numeroAnterior}${operador}${numeroAtual}`);
         atualizarDisplay(resultado);
+        historicoCalc(`${numeroAnterior} ${operador} ${numeroAtual}`)
     }
 }
 
@@ -28,19 +31,34 @@ const atualizarDisplay = (texto) => {
     }
 }
 
-const inserirNumero = (evento) => atualizarDisplay(evento.target.textContent);
+const historicoCalc = (texto) => {
+    if (novaConta) {
+        calc.textContent = texto.toLocaleString('BR');
+        novaConta = false;
+    } else {
+        calc.textContent += texto.toLocaleString('BR');
+    }
+}
+
+const inserirNumero = (evento) => {
+    atualizarDisplay(evento.target.textContent);
+    calc.textContent = numeroAnterior;
+    if(numeroAnterior) {
+        calc.textContent += ` ${operador}`;
+    }
+} 
+    
 numeros.forEach(numero => numero.addEventListener('click', inserirNumero));
 
 const selecionarOperador = (evento) => {
     if (!novoNumero) {
         calcular();
         novoNumero = true;
+        novaConta = true;
         operador = evento.target.textContent;
         numeroAnterior = parseFloat(display.textContent.replace(',', '.'));
-        console.log(operador);
     }
 }
-
 operadores.forEach(operador => operador.addEventListener('click', selecionarOperador));
 
 const ativarIgual = () => {
@@ -50,11 +68,14 @@ const ativarIgual = () => {
 document.getElementById('igual').addEventListener('click', ativarIgual);
 
 const limparDisplay = () => display.textContent = '';
+const limparHist = () => calc.textContent = '';
 document.getElementById('limparDisplay').addEventListener('click', limparDisplay)
 
 const limparCalculo = () => {
     limparDisplay();
+    limparHist();
     operador = undefined;
+    novaConta = true;
     novoNumero = true;
     numeroAnterior = undefined;
 }
@@ -98,16 +119,13 @@ const mapaTeclado = {
     '-' : 'operadorSubtrair',
     '+' : 'operadorAdicionar',
     'Enter' : 'igual',
-    'Escape' : 'limparDisplay',
+    'Escape' : 'limparCalculo',
     'Backspace' : 'backspace',
     ',' : 'decimal'
 }
 
 const mapearTeclado = (evento) => {
     const tecla = evento.key
-
-    console.log(tecla);
-
     document.getElementById(mapaTeclado[tecla]).click();
 }
 document.addEventListener('keydown', mapearTeclado);
